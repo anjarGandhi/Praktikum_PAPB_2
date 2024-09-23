@@ -156,7 +156,7 @@ fun MyScreen() {
             ),
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            // Box inside the button that handles long-press gesture
+
             Box(
                 modifier = Modifier
                     .padding(top = 3.dp)
