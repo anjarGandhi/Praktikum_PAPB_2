@@ -1,9 +1,11 @@
 package com.papb.praktikum2
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,10 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.materialIcon
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -33,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.papb.praktikum2.ui.theme.Praktikum2Theme
@@ -63,7 +66,7 @@ fun HeaderSection() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Praktikum 3",
+            text = "Praktikum 4",
             color = Color.Black,
             style = MaterialTheme.typography.headlineLarge
         )
@@ -72,9 +75,11 @@ fun HeaderSection() {
 
 @Composable
 fun MyScreen() {
+    val context = LocalContext.current
     var text by remember { mutableStateOf("") }
     var inputText by remember { mutableStateOf("") }
     var numberInput by remember { mutableStateOf("") }
+    val isFormFilled = inputText.isNotBlank() && numberInput.isNotBlank()
 
     Column(
         modifier = Modifier
@@ -108,7 +113,6 @@ fun MyScreen() {
                     modifier = Modifier.size(65.dp)
                 )
 
-
                 Spacer(modifier = Modifier.width(8.dp))
 
                 TextField(
@@ -117,9 +121,6 @@ fun MyScreen() {
                     label = { Text("Masukan Nama anda") },
                     modifier = Modifier.weight(1f)
                 )
-
-
-
             }
         }
 
@@ -145,18 +146,34 @@ fun MyScreen() {
             )
         }
 
-
-
-
-
         Button(
             onClick = {
-                text = " $inputText, $numberInput"
+                text = "$inputText, $numberInput"
             },
+            enabled = isFormFilled,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isFormFilled) MaterialTheme.colorScheme.primary else Color.Gray
+            ),
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            Text("Submit")
+            // Box inside the button that handles long-press gesture
+            Box(
+                modifier = Modifier
+                    .padding(top = 3.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onLongPress = {
+                                Toast.makeText(context, "Nama: $inputText, NIM: $numberInput", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Submit")
+            }
         }
+
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -170,7 +187,6 @@ fun MyScreen() {
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
