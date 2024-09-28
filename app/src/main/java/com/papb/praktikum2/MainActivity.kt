@@ -5,23 +5,17 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,22 +28,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
+import com.google.firebase.auth.FirebaseAuth
 import com.papb.praktikum2.ui.theme.Praktikum2Theme
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize Firebase Auth
+        auth = FirebaseAuth.getInstance()
+
         setContent {
             Praktikum2Theme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MyScreen()
+                    LoginScreen(auth)
                 }
             }
         }
@@ -57,29 +62,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun HeaderSection() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .background(Color.LightGray),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Praktikum 4",
-            color = Color.Black,
-            style = MaterialTheme.typography.headlineLarge
-        )
-    }
-}
-
-@Composable
-fun MyScreen() {
+fun LoginScreen(auth: FirebaseAuth) {
     val context = LocalContext.current
-    var text by remember { mutableStateOf("") }
-    var inputText by remember { mutableStateOf("") }
-    var numberInput by remember { mutableStateOf("") }
-    val isFormFilled = inputText.isNotBlank() && numberInput.isNotBlank()
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val isFormFilled = email.isNotBlank() && password.isNotBlank()
 
     Column(
         modifier = Modifier
@@ -89,109 +76,65 @@ fun MyScreen() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        HeaderSection()
+        Text(
+            text = "Login",
+            style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
+        TextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+        )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.AccountCircle,
-                    contentDescription = "Icon Profile",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(65.dp)
-                )
+        Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.width(8.dp))
+        TextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+        )
 
-                TextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    label = { Text("Masukan Nama anda") },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-
-            TextField(
-                value = numberInput,
-                onValueChange = {
-                    if (it.length <= 15 && it.all { char -> char.isDigit() }) {
-                        numberInput = it
-                    }
-                },
-                label = { Text("Masukan NIM anda") },
-                modifier = Modifier.weight(1f)
-            )
-        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
-                text = "$inputText, $numberInput"
+                if (isFormFilled) {
+                    auth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+
+                                val intent = Intent(context, ListActivity::class.java)
+                                context.startActivity(intent)
+                                Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+                            } else {
+
+                                Toast.makeText(context, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                }
             },
             enabled = isFormFilled,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isFormFilled) MaterialTheme.colorScheme.primary else Color.Gray
             ),
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-
-            Box(
-                modifier = Modifier
-                    .padding(top = 3.dp)
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onLongPress = {
-                                Toast.makeText(context, "Nama: $inputText, NIM: $numberInput", Toast.LENGTH_SHORT).show()
-                            }
-                        )
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Submit")
-            }
-        }
-
-
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = text)
+            Text("Login")
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
+fun LoginScreenPreview() {
     Praktikum2Theme {
-        MyScreen()
+        LoginScreen(FirebaseAuth.getInstance())
     }
 }
