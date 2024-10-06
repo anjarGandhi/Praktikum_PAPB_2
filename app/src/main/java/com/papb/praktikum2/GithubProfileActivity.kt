@@ -48,7 +48,7 @@ fun GithubProfileScreen() {
     var profile by remember { mutableStateOf<GithubProfile?>(null) }
     val scope = rememberCoroutineScope()
 
-    // Fetch Github profile data in a coroutine
+
     LaunchedEffect(Unit) {
         scope.launch(Dispatchers.IO) {
             val url = URL("https://api.github.com/users/anjarGandhi")
