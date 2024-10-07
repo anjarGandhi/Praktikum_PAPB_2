@@ -19,8 +19,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        buildConfigField("String", "BASE_URL_GITHUB", "\"https://api.github.com/\"")
-        buildConfigField("String", "API_KEY", "\"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\"")
+        
     }
 
     buildTypes {
