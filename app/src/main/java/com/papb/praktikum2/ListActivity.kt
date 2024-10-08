@@ -1,26 +1,36 @@
 package com.papb.praktikum2
 
 
+import android.content.Intent
+import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.cardview.widget.CardView
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.papb.praktikum2.ui.theme.Praktikum2Theme
@@ -31,19 +41,44 @@ class ListActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        db = FirebaseFirestore.getInstance() // Inisialisasi Firestore di sini
-
-        // Panggil fetchMatkulData untuk mengambil data saat Activity dibuat
+        db = FirebaseFirestore.getInstance()
         fetchMatkulData()
 
         setContent {
             Praktikum2Theme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    MatkulListScreen(matkulList) // Panggil MatkulListScreen di sini
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        MatkulListScreen(matkulList) // Display the list of 'matkul'
+
+
+                        FloatingActionButton(
+                            onClick = {
+
+                                val intent = Intent(this@ListActivity, GithubProfileActivity::class.java)
+                                startActivity(intent)
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(3.dp),
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.github_logo),
+                                contentDescription = "Go to GitHub Profile",
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(48.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
     }
+
 
     private fun fetchMatkulData() {
         db.collection("matkul")
