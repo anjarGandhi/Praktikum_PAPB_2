@@ -1,4 +1,5 @@
-package com.papb.praktikum2
+// profileScreen.kt
+package com.papb.praktikum2.screen
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

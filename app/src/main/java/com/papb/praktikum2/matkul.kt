@@ -1,6 +1,6 @@
 package com.papb.praktikum2
 
-data class matkul(
+public final data class Matkul(
     val hari: String = "",
     val jam: String = "",
     val matkul: String = "",

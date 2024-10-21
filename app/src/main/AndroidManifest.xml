@@ -25,8 +25,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ListActivity" />
-        <activity android:name=".GithubProfileActivity" />
+
+        <activity android:name="com.papb.praktikum2.screen.GithubProfileActivity" />
     </application>
 
 </manifest>
