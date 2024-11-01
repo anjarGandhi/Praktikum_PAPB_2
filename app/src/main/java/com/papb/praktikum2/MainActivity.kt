@@ -1,8 +1,10 @@
 package com.papb.praktikum2
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,16 +54,26 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.res.stringResource
 import com.papb.praktikum2.screen.GithubProfileScreen
 import com.papb.praktikum2.screen.MatkulScreen
+import com.papb.praktikum2.screen.TugasScreen
 
 class MainActivity : ComponentActivity() {
-
     private lateinit var auth: FirebaseAuth
+    private lateinit var navController: NavHostController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize Firebase Auth
+
         auth = FirebaseAuth.getInstance()
+
+        // Check if user is logged in
+        if (auth.currentUser == null) {
+            // If not logged in, redirect to LoginActivity
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+            return
+        }
 
         setContent {
             Praktikum2Theme {
@@ -69,92 +81,32 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Call the MainActivityContent composable
-                    MainActivityContent(auth)
+                    navController = rememberNavController()
+                    MainActivityContent(
+                        auth = auth,
+                        navController = navController,
+                        onBackPressed = { handleBackPress() }
+                    )
                 }
             }
         }
+
+        // Handle system back button
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                handleBackPress()
+            }
+        })
     }
-}
 
+    private fun handleBackPress() {
 
+        if (!navController.popBackStack()) {
 
-
-
-@Composable
-fun LoginScreen(auth: FirebaseAuth, navController: NavHostController) {
-    val context = LocalContext.current
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    val isFormFilled = email.isNotBlank() && password.isNotBlank()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Text(
-            text = "Login",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
-
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                if (isFormFilled) {
-                    auth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-                                // Navigate to the main content
-                                navController.navigate(Screen.Matkul.route) {
-                                    // Clear the back stack to prevent returning to the login screen
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                }
-                            } else {
-                                Toast.makeText(context, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                }
-            },
-            enabled = isFormFilled,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isFormFilled) MaterialTheme.colorScheme.primary else Color.Gray
-            ),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Login")
+            finish()
         }
     }
 }
-
 
 
 
@@ -221,42 +173,31 @@ private fun BottomBar(
 @Composable
 private fun MainActivityContent(
     auth: FirebaseAuth,
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
+    onBackPressed: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isUserLoggedIn = auth.currentUser != null
-
-
-    if (isUserLoggedIn) {
-        Scaffold(bottomBar = { BottomBar(navController) },
-            modifier = modifier) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = Screen.Matkul.route,
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                composable(Screen.Matkul.route) {
-                    MatkulScreen()
-                }
-                composable(Screen.Tugas.route) {
-
-                }
-                composable(Screen.Profil.route) {
-                    GithubProfileScreen()
-                }
+    Scaffold(
+        bottomBar = { BottomBar(navController) },
+        modifier = modifier
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Matkul.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(Screen.Matkul.route) {
+                MatkulScreen()
+            }
+            composable(Screen.Tugas.route) {
+                TugasScreen()
+            }
+            composable(Screen.Profil.route) {
+                GithubProfileScreen()
             }
         }
-    } else {
-
-        LoginScreen(auth = auth, navController = navController)
     }
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    Praktikum2Theme {
-        LoginScreen(FirebaseAuth.getInstance(), rememberNavController())
-    }
-}
+
